@@ -1,0 +1,108 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border: 8px solid #DDD;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #DDD transparent transparent transparent;
+        }
+
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<script src='https://js.braintreegateway.com/web/3.85.3/js/client.min.js'></script>
+<script src='https://js.braintreegateway.com/web/3.85.3/js/three-d-secure.min.js'></script>
+
+<body>
+    <div style="justify-content: center; display: flex; padding-top: 120px;">
+        <div class="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <script>
+        var braintree = window.braintree;
+
+        params.onLookupComplete = function (data, next) {
+            next();
+        };
+        function postToReact(isSuccess, response, errorType, error) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ isCustom: true, isSuccess: isSuccess, response: response, errorType: errorType, error: error }));
+        }
+
+        function init(token, params) {
+            try {
+                braintree.client.create({
+                    authorization: token,
+                }, (clientErr, clientInstance) => {
+                    if (clientErr) {
+                        postToReact(false, null, 'Client instancing error', clientErr);
+                        return;
+                    }
+
+                    braintree.threeDSecure.create({
+                        version: 2,
+                        client: clientInstance,
+                    }, (threeDSecureErr, threeDSecureInstance) => {
+                        if (threeDSecureErr) {
+                            postToReact(false, null, '3DS instancing error', threeDSecureErr);
+                            return;
+                        }
+
+                        threeDSecureInstance.verifyCard(params, (err, res) => {
+                            if (err) {
+                                postToReact(false, null, 'Verify card error', err);
+                                return;
+                            }
+                            postToReact(true, res, null, null);
+                        });
+                    });
+
+                });
+            } catch (ex) {
+                postToReact(false, null, 'Exception', ex);
+            }
+        }
+    </script>
+</body>
+
+</html>
