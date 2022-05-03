@@ -62,9 +62,6 @@
     <script>
         var braintree = window.braintree;
 
-        params.onLookupComplete = function (data, next) {
-            next();
-        };
         function postToReact(isSuccess, response, errorType, error) {
             window.ReactNativeWebView.postMessage(JSON.stringify({ isCustom: true, isSuccess: isSuccess, response: response, errorType: errorType, error: error }));
         }
@@ -72,6 +69,9 @@
         function init(token, params) {
             window.alert(JSON.stringify({token: token, params: params}));
             try {
+                params.onLookupComplete = function (data, next) {
+                    next();
+                };
                 braintree.client.create({
                     authorization: token,
                 }, (clientErr, clientInstance) => {
